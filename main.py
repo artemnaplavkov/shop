@@ -2,7 +2,7 @@ from data import db_session
 from data import users_resource
 from data.users import User
 from flask import Flask, request, render_template, url_for, redirect
-from flask_login import LoginManager, login_user, login_required
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_restful import reqparse, abort, Api, Resource
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, PasswordField
@@ -26,16 +26,16 @@ def load_user(id):
     return db_sess.query(User).get(id)
 
 
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('base.html')
+
+
 class LoginForm(FlaskForm):
     login = StringField('Имя', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
-    
-
-@app.route('/', methods=['GET'])
-def index():
-    return "hello shop"
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -49,9 +49,36 @@ def login():
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
         return render_template('login.html',
+                               title='Авторизация',
                                message="Неправильный логин или пароль",
                                form=form)
     return render_template('login.html', title='Авторизация', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
+
+
+class RegistrationForm(LoginForm):
+    submit = SubmitField('Зарегистрироваться')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('/'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(login=form.login.data, password=form.password.data)
+        db_sess = db_session.create_session()
+        db_sess.add(user)
+        db_sess.commit()
+        login_user(user, remember=form.remember_me.data)
+        return redirect("/")
+    return render_template('login.html', title='Регистрация', form=form)
 
 
 def main():
