@@ -1,7 +1,10 @@
 from data import db_session
 from data import users_resource
+from data import orders_resource
 from data.users import User
-from flask import Flask, request, render_template, url_for, redirect
+from data.orders import Order
+from data.orders_resource import order_field
+from flask import Flask, request, render_template, url_for, redirect, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_restful import reqparse, abort, Api, Resource
 from flask_wtf import FlaskForm
@@ -18,7 +21,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 api.add_resource(users_resource.UserListResource, '/api/v2/users')
 api.add_resource(users_resource.UserResource, '/api/v2/users/<int:id>')
-
+api.add_resource(orders_resource.OrderListResource, '/api/v2/orders')
+api.add_resource(orders_resource.OrderResource,
+                 '/api/v2/orders/<int:order_id>')
 
 @login_manager.user_loader
 def load_user(id):
@@ -80,6 +85,17 @@ def register():
         return redirect("/")
     return render_template('login.html', title='Регистрация', form=form)
 
+
+@app.route('/orders', methods=['GET'])
+def orders():
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        orders = db_sess.query(Order).filter(
+            Order.user_id == current_user.id)
+        return render_template("/orders.html", orders=orders)
+        # return jsonify({'orders': [order.to_dict(only=order_field) for order in orders]})
+    else:
+        return redirect("/")
 
 def main():
     db_session.global_init("db/shop.sqlite")
