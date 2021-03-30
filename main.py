@@ -3,7 +3,9 @@ from data import users_resource
 from data import orders_resource
 from data.users import User
 from data.orders import Order
+from data.order_details import OrderDetails
 from data.orders_resource import order_field
+from data.order_details_resource import order_details_field
 from flask import Flask, request, render_template, url_for, redirect, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_restful import reqparse, abort, Api, Resource
@@ -93,9 +95,19 @@ def orders():
         orders = db_sess.query(Order).filter(
             Order.user_id == current_user.id)
         return render_template("/orders.html", orders=orders)
-        # return jsonify({'orders': [order.to_dict(only=order_field) for order in orders]})
     else:
         return redirect("/")
+
+@app.route('/order/<int:order_id>', methods=['GET'])
+def order(order_id):
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        order_details = db_sess.query(OrderDetails).filter(
+            order_id == OrderDetails.order_id)
+        return jsonify({'order_details': [item.to_dict(only=order_details_field) for item in order_details]})
+    else:
+        return redirect("/")
+
 
 def main():
     db_session.global_init("db/shop.sqlite")
