@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Детали заказа</h1>
+{% for item in order_details%}
+<div class="col-md6 border rounded">
+    <h2>{{item.product.product_name}}</h2>
+    <div>
+        цена: {{item.price}}
+    </div>
+    <div>
+        количество: {{item.quantity}}
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

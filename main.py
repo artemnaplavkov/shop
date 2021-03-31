@@ -102,9 +102,14 @@ def orders():
 def order(order_id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
+        orders = db_sess.query(Order).filter(
+            Order.user_id == current_user.id).filter(order_id == Order.order_id)
+        print(orders)
+        if orders.count() != 1:
+            return redirect("/")
         order_details = db_sess.query(OrderDetails).filter(
             order_id == OrderDetails.order_id)
-        return jsonify({'order_details': [item.to_dict(only=order_details_field) for item in order_details]})
+        return render_template("/order_details.html", order_details=order_details)
     else:
         return redirect("/")
 

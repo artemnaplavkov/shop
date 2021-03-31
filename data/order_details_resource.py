@@ -7,32 +7,35 @@ from . import db_session
 from .order_details import OrderDetails
 
 
-#order_parser = reqparse.RequestParser()
-#order_parser.add_argument('order_id', required=True, type=int)
-#order_parser.add_argument('user_id', required=True, type=int)
-#order_parser.add_argument('bought_at', required=True)
+order_details_parser = reqparse.RequestParser()
+order_details_parser.add_argument('quantity', required=True, type=int)
+order_details_parser.add_argument('price', required=True, type=float)
+order_details_parser.add_argument('order_id', required=True, type=int)
+order_details_parser.add_argument('product_id', required=True, type=int)
 
 
-#def abort_if_order_not_found(order_id):
+
+#def abort_if_order_details_not_found(order_id, product_id):
     #session = db_session.create_session()
-    #order = session.query(Order).get(order_id)
-    #if not order:
-        #abort(404, message=f"Order {order_id} not found")
+    #order_details = session.query(OrderDetails).filter(OrderDetails.order_id=order_id).filter(OrderDetails.product_id=product_id)
+    #if order_details.count() != 1:
+        #abort(
+            #404, message=f"OrderDetails {order_id}, {product_id} not found")
 
 order_details_field = ('quantity', 'price', 'order_id', 'product_id')
 
-#class OrderResource(Resource):
-    #def get(self, order_id):
-        #abort_if_order_not_found(order_id)
+#class OrderDetailsResource(Resource):
+    #def get(self, order_id, product_id):
+        #abort_if_order_details_not_found(order_id, product_id)
         #session = db_session.create_session()
-        #order = session.query(Order).get(order_id)
+        #order = session.query(OrderDetails).get(order_id)
         #return jsonify({'order': order.to_dict(
-            #only=order_field)})
+            #only=order_details_field)})
 
     #def delete(self, order_id):
         #abort_if_order_not_found(order_id)
         #session = db_session.create_session()
-        #order = session.query(Order).get(order_id)
+        #order = session.query(OrderDetails).get(order_id)
         #session.delete(order)
         #session.commit()
         #return jsonify({'success': 'OK'})
@@ -41,17 +44,18 @@ order_details_field = ('quantity', 'price', 'order_id', 'product_id')
 #class OrderListResource(Resource):
     #def get(self):
         #session = db_session.create_session()
-        #order = session.query(Order).all()
-        #return jsonify({'order': [item.to_dict(
-            #only=order_field) for item in order]})
+        #order_details = session.query(OrderDetails).all()
+        #return jsonify({'order_details': [item.to_dict(
+            #only=order_details_field) for item in order_details]})
 
     #def post(self):
-        #args = order_parser.parse_args()
+        #args = order_details_parser.parse_args()
         #session = db_session.create_session()
-        #order = Order(
+        #order = OrderDetails(
+            #quantity=args['quantity'],
+            #price=args['price'],
             #order_id=args['order_id'],
-            #user_id=args['user_id'],
-            #bought_at=args['bought_at']
+            #product_id=args['product_id']
         #)
         #session.add(order)
         #session.commit()
