@@ -54,7 +54,7 @@ def login():
             User.login == form.login.data).first()
         if user and user.password == form.password.data:
             login_user(user, remember=form.remember_me.data)
-            return redirect("/")
+            return redirect("/orders")
         return render_template('login.html',
                                title='Авторизация',
                                message="Неправильный логин или пароль",
