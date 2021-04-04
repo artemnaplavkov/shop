@@ -1,10 +1,14 @@
 from data import db_session
 from data import users_resource
 from data import orders_resource
+from data import products_resource
+from data import order_details_resource
 from data.users import User
 from data.orders import Order
-from data.order_details import OrderDetails
 from data.orders_resource import order_field
+from data.products import Product
+from data.products_resource import product_field
+from data.order_details import OrderDetails
 from data.order_details_resource import order_details_field
 from flask import Flask, request, render_template, url_for, redirect, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -26,6 +30,13 @@ api.add_resource(users_resource.UserResource, '/api/v2/users/<int:id>')
 api.add_resource(orders_resource.OrderListResource, '/api/v2/orders')
 api.add_resource(orders_resource.OrderResource,
                  '/api/v2/orders/<int:order_id>')
+api.add_resource(products_resource.ProductListResource, '/api/v2/products')
+api.add_resource(products_resource.ProductResource,
+                 '/api/v2/products/<int:product_id>')
+api.add_resource(
+    order_details_resource.OrderDetailsListResource, '/api/v2/order_details')
+api.add_resource(
+    order_details_resource.OrderDetailsResource, '/api/v2/order_details/<int:order_id>/<int:product_id>')
 
 @login_manager.user_loader
 def load_user(id):
