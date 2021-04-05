@@ -6,6 +6,8 @@ from data import order_details_resource
 from data.users import User
 from data.orders import Order
 from data.orders_resource import order_field
+from data.basket import Basket
+from data.basket_resource import basket_field
 from data.products import Product
 from data.products_resource import product_field
 from data.order_details import OrderDetails
@@ -14,8 +16,8 @@ from flask import Flask, request, render_template, url_for, redirect, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_restful import reqparse, abort, Api, Resource
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, PasswordField
-from wtforms import BooleanField, SubmitField, IntegerField
+from wtforms import StringField, TextAreaField, PasswordField, FieldList, FormField
+from wtforms import BooleanField, SubmitField, IntegerField, SelectField
 from wtforms.validators import DataRequired
 
 
@@ -87,7 +89,7 @@ class RegistrationForm(LoginForm):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('/'))
+        return redirect('/')
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(login=form.login.data, password=form.password.data)
@@ -124,11 +126,51 @@ def order(order_id):
     else:
         return redirect("/")
 
+def product_choices():
+    result = []
+    db_sess = db_session.create_session()
+    for product in db_sess.query(Product).all():
+        result.append((str(product.product_id), product.product_name))
+    return result
+
+
+PRODUCT_CHOICES = []
+
+
+class ItemForm(FlaskForm):
+    product = SelectField('product', choices=PRODUCT_CHOICES)
+    quantity = IntegerField('quantity')
+    submit = SubmitField()
+
+
+class OrderForm(FlaskForm):
+    items = FieldList(FormField(ItemForm))
+
+
+@app.route('/buy', methods=['GET'])
+def buy():
+    if not current_user.is_authenticated:
+        return redirect('/')
+    form = OrderForm()
+    if form.validate_on_submit():
+        return redirect("/")
+    return render_template('buy.html', title='купить', form=form)
+
+
+@app.route('/basket', methods=['GET'])
+def basket():
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        basket = db_sess.query(Basket).filter(
+            Basket.user_id == current_user.id)
+        return render_template("/basket.html", basket=basket)
+    else:
+        return redirect("/")
+
 
 def main():
     db_session.global_init("db/shop.sqlite")
-    
-    
+    PRODUCT_CHOICES = product_choices()
     app.run(port=8080, host='127.0.0.1')
 
 
