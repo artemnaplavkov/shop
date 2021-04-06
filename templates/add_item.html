@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Добавить в заказ</h1>
+<form action="" method="post" role="form">
+    <div id="subforms-container">
+    {{ form.csrf_token }}
+    {{ form.product }}
+    {{ form.quantity }}
+    {{ form.submit }}
+    </div>
+</form>
+{% endblock %}

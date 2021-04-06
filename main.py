@@ -126,36 +126,6 @@ def order(order_id):
     else:
         return redirect("/")
 
-def product_choices():
-    result = []
-    db_sess = db_session.create_session()
-    for product in db_sess.query(Product).all():
-        result.append((str(product.product_id), product.product_name))
-    return result
-
-
-PRODUCT_CHOICES = []
-
-
-class ItemForm(FlaskForm):
-    product = SelectField('product', choices=PRODUCT_CHOICES)
-    quantity = IntegerField('quantity')
-    submit = SubmitField()
-
-
-class OrderForm(FlaskForm):
-    items = FieldList(FormField(ItemForm))
-
-
-@app.route('/buy', methods=['GET'])
-def buy():
-    if not current_user.is_authenticated:
-        return redirect('/')
-    form = OrderForm()
-    if form.validate_on_submit():
-        return redirect("/")
-    return render_template('buy.html', title='купить', form=form)
-
 
 @app.route('/basket', methods=['GET'])
 def basket():
@@ -166,6 +136,32 @@ def basket():
         return render_template("/basket.html", basket=basket)
     else:
         return redirect("/")
+
+
+def product_choices():
+    result = []
+    db_sess = db_session.create_session()
+    for product in db_sess.query(Product).filter(Product.quantity > 0):
+        result.append((str(product.product_id), product.product_name))
+    return result
+
+
+class ItemForm(FlaskForm):
+    product = SelectField('product', [])
+    quantity = IntegerField('quantity')
+    submit = SubmitField('Добавить в заказ')
+
+
+@app.route('/add_item', methods=['GET', 'POST'])
+def add_item():
+    if not current_user.is_authenticated:
+        return redirect('/')
+    ItemForm.product = SelectField('product', choices=product_choices())
+    form = ItemForm()
+    if form.validate_on_submit():
+        # todo:
+        return redirect('/basket')
+    return render_template('add_item.html', title='добавить в заказ', form=form)
 
 
 def main():
