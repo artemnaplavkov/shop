@@ -117,7 +117,6 @@ def order(order_id):
         db_sess = db_session.create_session()
         orders = db_sess.query(Order).filter(
             Order.user_id == current_user.id).filter(order_id == Order.order_id)
-        print(orders)
         if orders.count() != 1:
             return redirect("/")
         order_details = db_sess.query(OrderDetails).filter(
@@ -159,7 +158,20 @@ def add_item():
     ItemForm.product = SelectField('product', choices=product_choices())
     form = ItemForm()
     if form.validate_on_submit():
-        # todo:
+        try:
+            db_sess = db_session.create_session()
+            product = db_sess.query(Product).filter(
+                Product.product_id == int(form.product.data[0]))
+            if product.count() == 1:
+                item = Basket()
+                item.quantity = form.quantity.data
+                item.price = product[0].price
+                item.user_id = current_user.id
+                item.product_id = product[0].product_id
+                db_sess.add(item)
+                db_sess.commit()
+        except Exception as e:
+            print(e)
         return redirect('/basket')
     return render_template('add_item.html', title='добавить в заказ', form=form)
 
