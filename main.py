@@ -140,7 +140,7 @@ def basket():
 def product_choices():
     result = []
     db_sess = db_session.create_session()
-    for product in db_sess.query(Product).filter(Product.quantity > 0):
+    for product in db_sess.query(Product).filter(Product.quantity > 0).all():
         result.append((str(product.product_id), product.product_name))
     return result
 
@@ -161,7 +161,7 @@ def add_item():
         try:
             db_sess = db_session.create_session()
             product = db_sess.query(Product).filter(
-                Product.product_id == int(form.product.data[0]))
+                Product.product_id == int(form.product.data))
             if product.count() == 1:
                 item = Basket()
                 item.quantity = form.quantity.data
@@ -174,6 +174,21 @@ def add_item():
             print(e)
         return redirect('/basket')
     return render_template('add_item.html', title='добавить в заказ', form=form)
+
+
+@app.route('/remove_item/<int:product_id>', methods=['GET'])
+def remove_item(product_id):
+    if not current_user.is_authenticated:
+        return redirect('/')
+    try:
+        db_sess = db_session.create_session()
+        item = db_sess.query(Basket).filter(
+            Basket.user_id == current_user.id).filter(Basket.product_id == product_id).first()
+        db_sess.delete(item)
+        db_sess.commit()
+    except Exception as e:
+        print(e)
+    return redirect('/basket')
 
 
 def main():

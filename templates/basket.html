@@ -11,6 +11,9 @@
     <div>
         количество: {{item.quantity}}
     </div>
+    <div>
+        <a href="/remove_item/{{item.product.product_id}}">Удалить</a>
+    </div>
 </div>
 {% endfor %}
 <a href="/add_item">Добавить</a>
