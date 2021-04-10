@@ -3,15 +3,16 @@ from data import users_resource
 from data import orders_resource
 from data import products_resource
 from data import order_details_resource
+from data import basket_resource
 from data.users import User
 from data.orders import Order
 from data.orders_resource import order_field
-from data.basket import Basket
-from data.basket_resource import basket_field
 from data.products import Product
 from data.products_resource import product_field
 from data.order_details import OrderDetails
 from data.order_details_resource import order_details_field
+from data.basket import Basket
+from data.basket_resource import basket_field
 from flask import Flask, request, render_template, url_for, redirect, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_restful import reqparse, abort, Api, Resource
@@ -19,6 +20,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, PasswordField, FieldList, FormField
 from wtforms import BooleanField, SubmitField, IntegerField, SelectField
 from wtforms.validators import DataRequired
+import datetime
 
 
 
@@ -39,6 +41,11 @@ api.add_resource(
     order_details_resource.OrderDetailsListResource, '/api/v2/order_details')
 api.add_resource(
     order_details_resource.OrderDetailsResource, '/api/v2/order_details/<int:order_id>/<int:product_id>')
+api.add_resource(
+    basket_resource.BasketListResource, '/api/v2/basket')
+api.add_resource(
+    basket_resource.BasketResource, '/api/v2/basket/<int:user_id>/<int:product_id>')
+
 
 @login_manager.user_loader
 def load_user(id):
@@ -106,7 +113,7 @@ def orders():
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
         orders = db_sess.query(Order).filter(
-            Order.user_id == current_user.id)
+            Order.user_id == current_user.id).order_by(Order.bought_at.desc())
         return render_template("/orders.html", orders=orders)
     else:
         return redirect("/")
@@ -190,6 +197,39 @@ def remove_item(product_id):
         print(e)
     return redirect('/basket')
 
+
+@app.route('/buy', methods=['GET'])
+def buy():
+    if not current_user.is_authenticated:
+        return redirect('/')
+    try:
+        db_sess = db_session.create_session()
+        basket = db_sess.query(Basket).filter(
+            Basket.user_id == current_user.id).all()
+        if len(basket) == 0:
+            return redirect('/basket')
+        order = Order()
+        order.user_id = current_user.id
+        order.bought_at = datetime.datetime.now()
+        db_sess.add(order)
+        for item in basket:
+            product = db_sess.query(Product).filter(
+                Product.product_id == item.product_id).first()
+            product.quantity -= item.quantity
+            if product.quantity < 0:
+                raise ValueError('Товар закончился: ' + product.product_name)
+            order_detail = OrderDetails()
+            order_detail.order_id = order.order_id
+            order_detail.product_id = item.product_id
+            order_detail.price = product.price
+            order_detail.quantity = item.quantity
+            db_sess.add(order_detail)
+            db_sess.delete(item)
+        db_sess.commit()
+        return redirect('/orders')
+    except Exception as e:
+        print(e)
+        return redirect('/basket')
 
 def main():
     db_session.global_init("db/shop.sqlite")

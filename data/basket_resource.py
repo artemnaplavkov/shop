@@ -25,7 +25,7 @@ def abort_if_basket_not_found(user_id, product_id):
 
 basket_field = ('quantity', 'price', 'user_id', 'product_id')
 
-class OrderDetailsResource(Resource):
+class BasketResource(Resource):
     def get(self, user_id, product_id):
         abort_if_basket_not_found(user_id, product_id)
         session = db_session.create_session()
@@ -44,7 +44,7 @@ class OrderDetailsResource(Resource):
         return jsonify({'success': 'OK'})
 
 
-class OrderDetailsListResource(Resource):
+class BasketListResource(Resource):
     def get(self):
         session = db_session.create_session()
         basket = session.query(Basket).all()
