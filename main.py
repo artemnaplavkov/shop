@@ -96,14 +96,20 @@ class RegistrationForm(LoginForm):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect('/')
+       return redirect('/')
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(login=form.login.data, password=form.password.data)
-        db_sess = db_session.create_session()
-        db_sess.add(user)
-        db_sess.commit()
-        login_user(user, remember=form.remember_me.data)
+        try:
+            user = User(login=form.login.data, password=form.password.data)
+            db_sess = db_session.create_session()
+            db_sess.add(user)
+            db_sess.commit()
+            login_user(user, remember=form.remember_me.data)
+        except:
+            return render_template('login.html',
+                                   title='Авторизация',
+                                   message="Такой аккаунт уже существует или введены неккоректные данные",
+                                   form=form)
         return redirect("/")
     return render_template('login.html', title='Регистрация', form=form)
 
