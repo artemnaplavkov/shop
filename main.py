@@ -108,9 +108,9 @@ def register():
         except:
             return render_template('login.html',
                                    title='Авторизация',
-                                   message="Такой аккаунт уже существует или введены неккоректные данные",
+                                   message="Аккаунт с таким именем уже существует или введены неккоректные данные",
                                    form=form)
-        return redirect("/")
+        return redirect("/orders")
     return render_template('login.html', title='Регистрация', form=form)
 
 
