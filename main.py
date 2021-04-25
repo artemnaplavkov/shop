@@ -141,11 +141,14 @@ def order(order_id):
 
 @app.route('/basket', methods=['GET'])
 def basket():
+    msg = ''
+    if 'msg' in request.args.keys():
+        msg = request.args.get('msg')
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
         basket = db_sess.query(Basket).filter(
             Basket.user_id == current_user.id)
-        return render_template("/basket.html", basket=basket)
+        return render_template("/basket.html", message=msg, basket=basket)
     else:
         return redirect("/")
 
@@ -223,7 +226,7 @@ def buy():
                 Product.product_id == item.product_id).first()
             product.quantity -= item.quantity
             if product.quantity < 0:
-                raise ValueError('Товар закончился: ' + product.product_name)
+                return redirect(url_for('basket', msg=str('Недостаточно товара: ' + product.product_name)))
             order_detail = OrderDetails()
             order_detail.order_id = order.order_id
             order_detail.product_id = item.product_id

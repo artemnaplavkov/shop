@@ -2,6 +2,7 @@
 
 {% block content %}
 <h1>Корзина</h1>
+<h2>{{ message }}</h2>
 {% for item in basket%}
 <div class="col-md6 border rounded">
     <h2>{{item.product.product_name}}</h2>
